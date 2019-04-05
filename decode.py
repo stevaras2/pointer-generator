@@ -26,6 +26,8 @@ import pyrouge
 import util
 import logging
 import numpy as np
+import rouge.rouge_score as r
+
 
 FLAGS = tf.app.flags.FLAGS
 
@@ -49,6 +51,7 @@ class BeamSearchDecoder(object):
     self._vocab = vocab
     self._saver = tf.train.Saver() # we use this to load checkpoints for decoding
     self._sess = tf.Session(config=util.get_config())
+    self._article = 0
 
     # Load an initial checkpoint to use for decoding
     ckpt_path = util.load_ckpt(self._saver, self._sess)
@@ -143,6 +146,8 @@ class BeamSearchDecoder(object):
       decoded_words = decoded_words[fst_period_idx+1:] # everything else
       decoded_sents.append(' '.join(sent))
 
+    score1 = r.rouge_n(decoded_sents, reference_sents, 1)
+    print(score1)
     # pyrouge calls a perl script that puts the data into HTML files.
     # Therefore we need to make our output HTML safe.
     decoded_sents = [make_html_safe(w) for w in decoded_sents]
@@ -183,7 +188,9 @@ class BeamSearchDecoder(object):
     }
     if FLAGS.pointer_gen:
       to_write['p_gens'] = p_gens
-    output_fname = os.path.join(self._decode_dir, 'attn_vis_data.json')
+
+    self._article += 1
+    output_fname = os.path.join(self._decode_dir, 'attn_vis_data'+str(self._article)+'.json')
     with open(output_fname, 'w') as output_file:
       json.dump(to_write, output_file)
     tf.logging.info('Wrote visualization data to %s', output_fname)

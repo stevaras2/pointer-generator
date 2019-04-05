@@ -57,6 +57,7 @@ class Vocab(object):
     with open(vocab_file, 'r') as vocab_f:
       for line in vocab_f:
         pieces = line.split()
+        #print(pieces)
         if len(pieces) != 2:
           print('Warning: incorrectly formatted line in vocabulary file: %s\n' % line)
           continue
